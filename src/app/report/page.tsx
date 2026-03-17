@@ -23,7 +23,7 @@ export default function ReportPage() {
 									Medical Report
 								</p>
 								<h1 className="text-2xl font-semibold">
-									Printable Patient Assessment Report
+									Patient Assessment Report
 								</h1>
 								<p className="text-sm text-slate-500">
 									Clean print format for insertion in
@@ -50,7 +50,7 @@ export default function ReportPage() {
 										Hospital
 									</p>
 									<p className="font-semibold text-slate-800">
-										Metro Care Medical Center
+										SRM Global Hospital
 									</p>
 								</div>
 								<div>
@@ -58,7 +58,7 @@ export default function ReportPage() {
 										Doctor
 									</p>
 									<p className="font-semibold text-slate-800">
-										Dr. Priya Sharma
+										Dr. Madhusudhan
 									</p>
 								</div>
 								<div>

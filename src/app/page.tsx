@@ -33,10 +33,10 @@ export default function Home() {
 								Good morning
 							</p>
 							<h1 className="text-2xl font-semibold text-slate-900">
-								Dr. Priya Sharma
+								Dr. Madhusudhan
 							</h1>
 							<p className="mt-1 text-sm text-slate-500">
-								Hospital Mental Health Assessment
+								SRM Global Hospital
 							</p>
 						</div>
 						<div className="w-full flex flex-col items-stretch gap-2">
@@ -47,7 +47,7 @@ export default function Home() {
 							<ActionButton
 								text="Generate Report"
 								variant="ghost"
-								onClick={() => {}}
+								onClick={() => router.push("/report")}
 							/>
 						</div>
 					</div>
@@ -85,10 +85,16 @@ export default function Home() {
 							<button className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-primary hover:text-primary">
 								Patient search
 							</button>
-							<button className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-primary hover:text-primary">
-								New test entry
+							<button
+								className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-primary hover:text-primary"
+								onClick={() => router.push("/patients/new")}
+							>
+								New Patient record
 							</button>
-							<button className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-primary hover:text-primary">
+							<button
+								className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left hover:border-primary hover:text-primary"
+								onClick={() => router.push("/history")}
+							>
 								Reports archive
 							</button>
 						</div>
@@ -104,12 +110,6 @@ export default function Home() {
 									Latest completed sessions
 								</h3>
 							</div>
-							<Link
-								href="/history"
-								className="text-sm text-primary font-semibold"
-							>
-								View History
-							</Link>
 						</div>
 						<div className="mt-3 space-y-2">
 							{assessments.slice(0, 3).map((item) => (

@@ -30,10 +30,6 @@ export default function HistoryPage() {
 									Review past tests and download summary PDFs.
 								</p>
 							</div>
-							<ActionButton
-								text="New Assessment"
-								onClick={() => {}}
-							/>
 						</div>
 
 						<div className="mt-4 overflow-x-auto">
