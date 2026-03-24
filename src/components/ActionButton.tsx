@@ -7,7 +7,7 @@ interface ActionButtonProps {
 
 export default function ActionButton(props: ActionButtonProps) {
 	const base =
-		"px-4 py-2 rounded-lg text-sm font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+		"w-full px-4 py-2 rounded-lg text-md font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 	const variantClass =
 		props.variant === "ghost"
 			? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
