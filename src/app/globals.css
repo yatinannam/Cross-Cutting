@@ -1,32 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F6F7F8;
+  --background: #F8FAFC; /* Lighter, cooler slate for a modern PWA app feel */
   --foreground: #0F172A;
-  --blackText : #0F172A;
-  --greyText : #64748B;
-  --primary : #137FEC;
+  --blackText: #0F172A;
+  --greyText: #64748B;
+  --primary: #3B82F6; /* Brighter, more modern blue */
+  --primary-hover: #2563EB;
+  --primary-focus: #BFDBFE;
   --font-inter: var(--font-geist-sans), sans-serif;
 }
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
 
 @theme inline {
   --color-background: var(--background);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-inter);
   --color-primary: var(--primary);
-  --color-blackText : var(--blackText);
-  --color-greyText : var(--greyText);
+  --color-blackText: var(--blackText);
+  --color-greyText: var(--greyText);
 }
 
-
 body {
-  background: var(--background);
+  background: var(--color-background);
   color: var(--foreground);
-  font-family: var(--font-inter);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Optimize tap highlight for mobile PWA */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }

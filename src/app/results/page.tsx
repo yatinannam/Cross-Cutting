@@ -100,8 +100,8 @@ function ResultsContent() {
   const domainScores = result?.domain_scores ?? [];
 
   return (
-    <div className="min-h-screen bg-background pb-16 text-slate-900 xl:pb-0">
-      <div className="mx-auto flex w-full max-w-6xl gap-4 p-4">
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
+      <div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
         <Sidebar />
         <div className="flex-1 space-y-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

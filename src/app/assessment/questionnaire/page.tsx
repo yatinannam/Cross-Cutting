@@ -239,13 +239,16 @@ function QuestionnaireContent() {
 
 	if (loading) {
 		return (
-			<div className="min-h-screen bg-background pb-16 text-slate-900 xl:pb-0">
-				<div className="mx-auto flex w-full max-w-6xl gap-4 p-4">
+			<div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8">
+				<div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
 					<Sidebar />
-					<div className="flex-1 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-						<p className="text-sm text-slate-500">
-							Loading questionnaire...
-						</p>
+					<div className="flex-1 rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm min-h-[500px] flex items-center justify-center">
+						<div className="flex flex-col items-center justify-center gap-3">
+							<div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-primary animate-spin" />
+							<p className="text-sm font-medium text-slate-500 animate-pulse">
+								Loading questionnaire...
+							</p>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -253,48 +256,51 @@ function QuestionnaireContent() {
 	}
 
 	return (
-		<div className="min-h-screen bg-background pb-16 text-slate-900 xl:pb-0">
-			<div className="mx-auto flex w-full max-w-6xl gap-4 p-4">
+		<div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
+			<div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
 				<Sidebar />
-				<div className="flex-1 space-y-4">
-					<div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-						<div className="flex items-start justify-between gap-2">
+				<div className="flex-1 space-y-5 flex-col flex max-w-3xl mx-auto xl:mx-0">
+					<div className="rounded-3xl border border-slate-200/60 bg-white p-5 sm:p-8 shadow-sm">
+						<div className="flex items-start justify-between gap-4 mb-6">
 							<div>
-								<p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-									Questionnaire
-								</p>
-								<h1 className="text-2xl font-semibold">
+								<div className="flex items-center gap-2 mb-2">
+									<span className="flex h-6 items-center rounded-md bg-blue-50 px-2 text-[10px] font-bold uppercase tracking-widest text-primary">
+										Questionnaire
+									</span>
+								</div>
+								<h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 bg-clip-text">
 									{definition?.title ?? "DSM-5 Assessment"}
 								</h1>
-								<p className="text-sm text-slate-500">
-									One question at a time. You can move back
-									and edit answers anytime.
+								<p className="mt-1 text-[15px] text-slate-500 font-medium">
+									Answer one question at a time.
 								</p>
 							</div>
 						</div>
 
-						<div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-							<div className="flex items-center justify-between text-xs text-slate-500">
-								<span>
-									Answered: {Object.keys(answers).length}
+						<div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4 sm:p-5 mb-6">
+							<div className="flex items-center justify-between text-[13px] font-semibold text-slate-500 mb-3">
+								<span className="flex items-center gap-1.5">
+									<div className="w-2 h-2 rounded-full bg-green-500"></div>
+									Answered: {Object.keys(answers).length} / {totalQuestions}
 								</span>
-								<span>Total score: {totalScore}</span>
+								<span className="bg-white px-2 py-1 flex items-center justify-center rounded-md shadow-sm border border-slate-100">Score: {totalScore}</span>
 							</div>
-							<div className="mt-2 h-2 w-full rounded-full bg-slate-200">
+							<div className="relative h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
 								<div
-									className="h-2 rounded-full bg-primary transition-all"
+									className="absolute inset-y-0 left-0 rounded-full bg-primary transition-all duration-700 ease-out"
 									style={{ width: `${completionPercent}%` }}
 								/>
 							</div>
 						</div>
 
 						{error && (
-							<p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
+							<div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-[14px] font-medium text-rose-700 flex items-center gap-3">
+								<svg viewBox="0 0 24 24" className="w-5 h-5 fill-rose-500"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
 								{error}
-							</p>
+							</div>
 						)}
 
-						<div className="mt-4 space-y-3">
+						<div className="space-y-4">
 							{currentQuestion ? (
 								<QuestionCard
 									question={currentQuestion.text}
@@ -307,45 +313,49 @@ function QuestionnaireContent() {
 									}
 								/>
 							) : (
-								<p className="text-sm text-slate-500">
-									No question found.
-								</p>
+								<div className="py-10 text-center">
+									<p className="text-[15px] font-medium text-slate-500">
+										Loading next question...
+									</p>
+								</div>
 							)}
 						</div>
-						<div className="mt-4 flex md:flex-row flex-col items-stretch gap-2">
+						<div className="mt-8 flex flex-col-reverse sm:flex-row items-center gap-3 pt-6 border-t border-slate-100">
 							<ActionButton
 								text="Previous"
-								variant="ghost"
+								variant="secondary"
+								className="w-full sm:w-1/3"
 								onClick={() => {
 									void handlePrevious();
 								}}
+								disabled={saving || submitting || currentQuestionIndex === 1}
 							/>
 							{currentQuestionIndex < totalQuestions ? (
 								<ActionButton
-									text={saving ? "Saving..." : "Next"}
+									text="Next"
+									className="w-full sm:w-2/3 shadow-md shadow-blue-500/20"
+									isLoading={saving}
 									onClick={() => {
 										void handleNext();
 									}}
 								/>
 							) : (
 								<ActionButton
-									text={
-										submitting
-											? "Submitting..."
-											: "Submit Assessment"
-									}
+									text="Submit Assessment"
+									className="w-full sm:w-2/3 shadow-md shadow-blue-500/20"
+									isLoading={submitting}
 									onClick={() => {
 										void handleSubmit();
 									}}
 								/>
 							)}
 						</div>
-						<div className="mt-2 text-sm">
+						<div className="mt-4 text-center">
 							<Link
 								href="/assessment"
-								className="text-primary font-semibold"
+								className="inline-block text-[14px] font-semibold text-slate-500 hover:text-slate-800 transition-colors"
 							>
-								Back to setup
+								Cancel & Return to Setup
 							</Link>
 						</div>
 					</div>
@@ -359,8 +369,8 @@ export default function QuestionnairePage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="min-h-screen bg-background p-4 text-sm text-slate-500">
-					Loading...
+				<div className="min-h-screen flex items-center justify-center bg-slate-50">
+					<div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-primary animate-spin" />
 				</div>
 			}
 		>

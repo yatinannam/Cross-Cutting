@@ -5,6 +5,7 @@ import {
 	LockIcon,
 	SearchIcon,
 } from "lucide-react";
+import { useState } from "react";
 
 export enum IconType {
 	mail,
@@ -25,32 +26,43 @@ interface EditTextProps {
 }
 
 function EditText(props: EditTextProps) {
+	const [isFocused, setIsFocused] = useState(false);
+
 	return (
-		<div className="flex flex-col my-2 w-full">
-			<label className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+		<div className="flex flex-col my-3 w-full">
+			<label className={`mb-1.5 ml-1 text-[13px] font-semibold tracking-wide transition-colors ${isFocused ? "text-primary" : "text-slate-600"}`}>
 				{props.name}
 			</label>
-			<div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-2 py-2">
+			<div 
+				className={`flex items-center gap-2.5 rounded-xl border bg-white px-3.5 py-3 min-h-[52px] transition-all duration-200 ${
+					isFocused 
+						? "border-primary ring-[3px] ring-blue-100" 
+						: "border-slate-200 hover:border-slate-300"
+				}`}
+			>
 				{props.icon === IconType.mail && (
-					<MailIcon className="w-4 h-4 text-slate-400" />
+					<MailIcon className={`w-[18px] h-[18px] transition-colors ${isFocused ? "text-primary" : "text-slate-400"}`} />
 				)}
 				{props.icon === IconType.hospital && (
-					<HospitalIcon className="w-4 h-4 text-slate-400" />
+					<HospitalIcon className={`w-[18px] h-[18px] transition-colors ${isFocused ? "text-primary" : "text-slate-400"}`} />
 				)}
 				{props.icon === IconType.person && (
-					<UserIcon className="w-4 h-4 text-slate-400" />
+					<UserIcon className={`w-[18px] h-[18px] transition-colors ${isFocused ? "text-primary" : "text-slate-400"}`} />
 				)}
 				{props.icon === IconType.lock && (
-					<LockIcon className="w-4 h-4 text-slate-400" />
+					<LockIcon className={`w-[18px] h-[18px] transition-colors ${isFocused ? "text-primary" : "text-slate-400"}`} />
 				)}
 				{props.icon === IconType.search && (
-					<SearchIcon className="w-4 h-4 text-slate-400" />
+					<SearchIcon className={`w-[18px] h-[18px] transition-colors ${isFocused ? "text-primary" : "text-slate-400"}`} />
 				)}
+				
 				<input
-					className="w-full bg-transparent text-slate-800 placeholder:text-slate-400 focus:outline-none"
+					className="w-full bg-transparent text-[15px] font-medium text-slate-800 placeholder:text-slate-400 placeholder:font-normal focus:outline-none"
 					type={props.type ?? "text"}
 					placeholder={props.placeholder}
 					value={props.value}
+					onFocus={() => setIsFocused(true)}
+					onBlur={() => setIsFocused(false)}
 					onChange={(e) => props.onChange(e.target.value)}
 				/>
 			</div>

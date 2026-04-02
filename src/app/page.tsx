@@ -90,8 +90,8 @@ export default function Home() {
 	};
 
 	return (
-		<div className="min-h-screen bg-background pb-16 text-slate-900 xl:pb-0">
-			<div className="mx-auto flex w-full max-w-6xl gap-4 p-4">
+		<div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
+			<div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
 				<Sidebar />
 				<div className="flex-1 space-y-4">
 					{error && (
@@ -99,19 +99,24 @@ export default function Home() {
 							{error}
 						</p>
 					)}
-					<div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+					<div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200/60 bg-white p-6 sm:p-8 shadow-sm">
 						<div className="flex flex-col">
-							<p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-								Good morning
+							<p className="text-[12px] font-bold uppercase tracking-widest text-primary mb-1">
+								Dashboard
 							</p>
-							<h1 className="text-2xl font-semibold text-slate-900">
-								{dashboard?.doctor.doctorName ?? "Doctor"}
+							<h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+								Hello, {dashboard?.doctor.doctorName ?? "Doctor"}
 							</h1>
-							<p className="mt-1 text-sm text-slate-500">
+							<p className="mt-1 text-[15px] font-medium text-slate-500">
 								{dashboard?.doctor.doctorEmail ??
 									"Authenticated clinician"}
 							</p>
 						</div>
+						<ActionButton 
+							text="New Assessment" 
+							className="w-full sm:w-auto px-6 whitespace-nowrap shadow-md shadow-blue-500/20"
+							onClick={newAssessment} 
+						/>
 					</div>
 
 					<div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -144,18 +149,18 @@ export default function Home() {
 						/>
 					</div>
 
-					<div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-						<div className="flex items-center justify-between">
+					<div className="rounded-3xl border border-slate-200/60 bg-white p-5 sm:p-7 shadow-sm">
+						<div className="flex items-center justify-between mb-5">
 							<div>
-								<p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-									Recent assessments
+								<p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+									Recent activity
 								</p>
-								<h3 className="text-lg font-semibold text-slate-900">
-									Latest completed sessions
+								<h3 className="text-xl font-bold text-slate-900 tracking-tight">
+									Completed sessions
 								</h3>
 							</div>
 						</div>
-						<div className="mt-3 space-y-2">
+						<div className="space-y-3">
 							{recentItems.slice(0, 3).map((item) => {
 								const patient = Array.isArray(item.patients)
 									? item.patients[0]
@@ -176,25 +181,30 @@ export default function Home() {
 								return (
 									<div
 										key={item.id}
-										className="flex items-center justify-between rounded-xl border border-slate-200 p-3"
+										className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition-all hover:bg-white hover:border-slate-300 hover:shadow-sm"
 									>
-										<div>
-											<div className="text-sm font-semibold text-slate-800">
-												{patient?.full_name ??
-													"Unknown Patient"}
+										<div className="flex items-center gap-4">
+											<div className="h-10 w-10 flex shrink-0 items-center justify-center rounded-full bg-blue-100 text-primary">
+												<HospitalIcon className="w-5 h-5" />
 											</div>
-											<div className="text-xs text-slate-500">
-												DSM-5 Level 1 -{" "}
-												{new Date(
-													item.started_at,
-												).toLocaleDateString()}
+											<div>
+												<div className="text-[15px] font-bold text-slate-800">
+													{patient?.full_name ??
+														"Unknown Patient"}
+												</div>
+												<div className="text-[13px] font-medium text-slate-500">
+													DSM-5 Level 1 •{" "}
+													{new Date(
+														item.started_at,
+													).toLocaleDateString()}
+												</div>
 											</div>
 										</div>
-										<div className="text-right">
-											<p className="font-semibold text-slate-700">
-												Score {score ?? "-"}
+										<div className="sm:text-right flex sm:block justify-between items-center sm:pl-0 pl-14">
+											<p className="text-[15px] font-bold text-slate-700 bg-slate-100 px-3 py-1 sm:p-0 sm:bg-transparent rounded-lg">
+												Score: <span className="text-primary">{score ?? "-"}</span>
 											</p>
-											<p className="text-xs text-slate-500">
+											<p className="text-[13px] font-semibold text-slate-500 mt-1">
 												{label ?? item.status}
 											</p>
 										</div>
@@ -202,9 +212,25 @@ export default function Home() {
 								);
 							})}
 							{!loading && recentItems.length === 0 && (
-								<p className="text-sm text-slate-500">
-									No recent assessments yet.
-								</p>
+								<div className="flex flex-col items-center justify-center py-12 text-center bg-slate-50/50 rounded-2xl border border-slate-100 border-dashed">
+									<div className="h-16 w-16 mb-4 flex items-center justify-center rounded-full bg-blue-50 text-blue-300">
+										<svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+									</div>
+									<h3 className="text-[15px] font-bold text-slate-700 mb-1">No assessments yet</h3>
+									<p className="text-[14px] text-slate-500 max-w-[250px]">
+										Get started by running a new assessment for a patient.
+									</p>
+									<ActionButton
+										text="Start Assessment"
+										className="mt-6 px-6 shadow-sm"
+										onClick={newAssessment} 
+									/>
+								</div>
+							)}
+							{loading && (
+								<div className="flex flex-col items-center justify-center py-12">
+									<div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-primary animate-spin" />
+								</div>
 							)}
 						</div>
 					</div>
