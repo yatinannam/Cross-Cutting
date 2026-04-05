@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Home, ClipboardList, LogOut, Users } from "lucide-react";
-import { signOut } from "@/lib/auth";
+import { useClerk } from "@clerk/nextjs";
 
 const items = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -13,10 +13,11 @@ const items = [
 export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const clerk = useClerk();
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/login");
+    await clerk.signOut({ redirectUrl: "/sign-in" });
+    router.push("/sign-in");
   };
 
   return (

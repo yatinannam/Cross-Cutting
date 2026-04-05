@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 export default function NewPatientPage() {
 const router = useRouter();
+const { isLoaded, isSignedIn } = useRequireAuth();
 
 const [name, setName] = useState("");
 const [dob, setDob] = useState("");
@@ -18,12 +19,12 @@ const [error, setError] = useState<string | null>(null);
 
 useEffect(() => {
 const checkAuth = async () => {
-const signedIn = await isSignedIn();
-if (!signedIn) router.replace("/login");
+if (!isLoaded) return;
+if (!isSignedIn) return;
 };
 
 void checkAuth();
-}, [router]);
+}, [isLoaded, isSignedIn, router]);
 
 const handleCreate = async () => {
 if (loading) return;

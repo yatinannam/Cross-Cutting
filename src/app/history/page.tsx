@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface HistoryItem {
   id: string;
@@ -28,17 +28,15 @@ interface HistoryItem {
 
 export default function HistoryPage() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useRequireAuth();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       setLoading(true);
       setError(null);
@@ -66,7 +64,7 @@ export default function HistoryPage() {
     };
 
     void bootstrap();
-  }, [router]);
+  }, [isLoaded, isSignedIn, router]);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">

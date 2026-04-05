@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import ActionButton from "@/components/ActionButton";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
 import { HospitalIcon } from "lucide-react";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface DashboardResponse {
   doctor: {
@@ -40,17 +40,15 @@ interface DashboardResponse {
 
 export default function Home() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useRequireAuth();
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       setLoading(true);
       setError(null);
@@ -78,7 +76,7 @@ export default function Home() {
     };
 
     void bootstrap();
-  }, [router]);
+  }, [isLoaded, isSignedIn, router]);
 
   const recentItems = useMemo(
     () => dashboard?.recentSessions ?? [],
@@ -88,6 +86,14 @@ export default function Home() {
   const newAssessment = () => {
     router.push("/assessment");
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
