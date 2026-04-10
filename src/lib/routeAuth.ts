@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export interface AuthDoctorContext {
   doctorId: string;
@@ -7,34 +8,31 @@ export interface AuthDoctorContext {
   doctorEmail: string;
 }
 
-function extractBearerToken(request: NextRequest): string | null {
-  const header = request.headers.get("authorization");
-  if (!header) return null;
-
-  const [scheme, token] = header.split(" ");
-  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
-
-  return token;
-}
-
 export async function requireDoctorAuth(request: NextRequest): Promise<AuthDoctorContext> {
-  const token = extractBearerToken(request);
-  if (!token) {
-    throw new Error("Missing auth token");
+  void request;
+
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
   }
 
-  const supabase = getSupabaseServerClient();
-  const { data, error } = await supabase.auth.getUser(token);
+  const user = await currentUser();
+  const doctorEmail =
+    user?.primaryEmailAddress?.emailAddress ??
+    user?.emailAddresses?.[0]?.emailAddress ??
+    null;
 
-  if (error || !data.user || !data.user.email) {
-    throw new Error("Invalid auth token");
+  if (!doctorEmail) {
+    throw new Error("Authenticated user is missing an email address");
   }
 
-  const doctorEmail = data.user.email;
   const displayName =
-    (typeof data.user.user_metadata?.full_name === "string" && data.user.user_metadata.full_name.trim()) ||
+    (typeof user?.fullName === "string" && user.fullName.trim()) ||
+    (typeof user?.firstName === "string" && user.firstName.trim()) ||
     doctorEmail.split("@")[0] ||
     "Doctor";
+
+  const supabase = getSupabaseServerClient();
 
   const { data: existingDoctor, error: doctorLookupError } = await supabase
     .from("doctors")

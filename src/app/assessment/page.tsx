@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface PatientItem {
   id: string;
@@ -15,6 +15,7 @@ interface PatientItem {
 
 export default function AssessmentPage() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useRequireAuth();
   const [patients, setPatients] = useState<PatientItem[]>([]);
   const [patientId, setPatientId] = useState("");
   const [doctorNote, setDoctorNote] = useState("");
@@ -24,11 +25,8 @@ export default function AssessmentPage() {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       setIsLoadingPatients(true);
       setError(null);
@@ -61,7 +59,7 @@ export default function AssessmentPage() {
     };
 
     void bootstrap();
-  }, [router]);
+  }, [isLoaded, isSignedIn, router]);
 
   const startAssessment = async () => {
     if (isCreating) return;

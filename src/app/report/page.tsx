@@ -3,8 +3,8 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface ReportResult {
   total_score: number;
@@ -28,6 +28,7 @@ function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
+  const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,11 +36,8 @@ function ReportContent() {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       if (!sessionId) {
         router.replace("/history");
@@ -82,7 +80,7 @@ function ReportContent() {
     };
 
     void bootstrap();
-  }, [router, sessionId]);
+  }, [isLoaded, isSignedIn, router, sessionId]);
 
   const primary = result?.diagnosis.primaryDiagnosis;
   const topFlagged = useMemo(

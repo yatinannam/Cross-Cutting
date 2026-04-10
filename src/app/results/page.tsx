@@ -4,8 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
 import Link from "next/link";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface DomainScore {
   domain: string;
@@ -39,6 +39,7 @@ function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
+  const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ResultPayload | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,11 +47,8 @@ function ResultsContent() {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       if (!sessionId) {
         router.replace("/assessment");
@@ -92,7 +90,7 @@ function ResultsContent() {
     };
 
     void bootstrap();
-  }, [router, sessionId]);
+  }, [isLoaded, isSignedIn, router, sessionId]);
 
   const primaryDiagnosis = result?.diagnosis.primaryDiagnosis;
   const differentials = result?.diagnosis.differentialDiagnoses ?? [];

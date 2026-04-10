@@ -5,8 +5,8 @@ import Sidebar from "@/components/Sidebar";
 import QuestionCard from "@/components/QuestionCard";
 import ActionButton from "@/components/ActionButton";
 import Link from "next/link";
-import { isSignedIn } from "@/lib/auth";
 import { authFetch } from "@/lib/authFetch";
+import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface QuestionnaireDefinition {
   title: string;
@@ -34,6 +34,7 @@ function QuestionnaireContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
+  const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [definition, setDefinition] = useState<QuestionnaireDefinition | null>(
     null,
@@ -70,11 +71,8 @@ function QuestionnaireContent() {
 
   useEffect(() => {
     const bootstrap = async () => {
-      const signedIn = await isSignedIn();
-      if (!signedIn) {
-        router.replace("/login");
-        return;
-      }
+      if (!isLoaded) return;
+      if (!isSignedIn) return;
 
       if (!sessionId) {
         router.replace("/assessment");
@@ -116,7 +114,7 @@ function QuestionnaireContent() {
     };
 
     void bootstrap();
-  }, [router, sessionId]);
+  }, [isLoaded, isSignedIn, router, sessionId]);
 
   const updateAnswer = (id: number, score: number) => {
     setAnswers((prev) => ({ ...prev, [id]: score }));

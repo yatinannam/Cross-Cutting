@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+1) Create `.env.local` from `.env.example` and fill in your keys.
+
 First, run the development server:
 
 ```bash
