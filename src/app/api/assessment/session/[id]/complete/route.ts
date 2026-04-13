@@ -6,6 +6,12 @@ import { requireDoctorAuth } from "@/lib/routeAuth";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const payload = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const clinicianNote =
+      typeof payload.doctorNote === "string" && payload.doctorNote.trim().length > 0
+        ? payload.doctorNote.trim()
+        : null;
+
     const doctor = await requireDoctorAuth(request);
     const { id } = await context.params;
     const supabase = getSupabaseServerClient();
@@ -77,6 +83,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       primaryDiagnosis: result.primaryDiagnosis,
       differentialDiagnoses: result.differentialDiagnoses,
       note: result.note,
+      clinicianNote,
     };
 
     const { error: saveResultError } = await supabase.from("scoring_results").upsert(

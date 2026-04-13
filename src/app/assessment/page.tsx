@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
+import Dropdown from "@/components/Dropdown";
 import { authFetch } from "@/lib/authFetch";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
@@ -92,6 +93,13 @@ export default function AssessmentPage() {
         throw new Error(data.error ?? "Failed to create assessment session");
       }
 
+      const trimmedNote = doctorNote.trim();
+      if (trimmedNote.length > 0) {
+        localStorage.setItem(`clinical-note:${data.sessionId}`, trimmedNote);
+      } else {
+        localStorage.removeItem(`clinical-note:${data.sessionId}`);
+      }
+
       router.push(`/assessment/questionnaire?sessionId=${data.sessionId}`);
     } catch (requestError) {
       setError(
@@ -128,21 +136,16 @@ export default function AssessmentPage() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-primary/50">
-                <label className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block">
-                  Patient
-                </label>
-                <select
+                <Dropdown
+                  label="Patient"
                   value={patientId}
-                  onChange={(event) => setPatientId(event.target.value)}
-                  className="w-full min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] font-medium text-slate-800 shadow-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer"
+                  onChange={(value) => setPatientId(value)}
+                  options={patients.map((item) => ({
+                    value: item.id,
+                    label: item.full_name,
+                  }))}
                   disabled={isLoadingPatients || patients.length === 0}
-                >
-                  {patients.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.full_name}
-                    </option>
-                  ))}
-                </select>
+                />
                 <p className="mt-2 text-[13px] font-medium text-slate-500">
                   {isLoadingPatients
                     ? "Loading patients..."
@@ -190,10 +193,10 @@ export default function AssessmentPage() {
 
             <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-3">
               <ActionButton
-                text="Add New Patient"
+                text="Manage Patients"
                 variant="ghost"
                 className="w-full sm:w-1/3"
-                onClick={() => router.push("/patients/new")}
+                onClick={() => router.push("/patients")}
               />
               <ActionButton
                 text="Start Assessment Session"

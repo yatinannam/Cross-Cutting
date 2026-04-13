@@ -3,6 +3,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { authFetch } from "@/lib/authFetch";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
@@ -20,6 +21,7 @@ interface ReportResult {
     primaryDiagnosis?: { label: string; confidenceScore: number };
     differentialDiagnoses?: Array<{ label: string; confidenceScore: number }>;
     note?: string;
+    clinicianNote?: string;
   };
   generated_at: string;
 }
@@ -31,6 +33,9 @@ function ReportContent() {
   const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ReportResult | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -88,6 +93,136 @@ function ReportContent() {
     [result],
   );
 
+  const deleteReport = async () => {
+    if (!sessionId || isDeleting) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await authFetch(`/api/assessment/session/${sessionId}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to delete report");
+      }
+
+      setDeleteDialogOpen(false);
+      router.replace("/history");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to delete report",
+      );
+      setIsDeleting(false);
+    }
+  };
+
+  const downloadReportPdf = async () => {
+    if (!result || !sessionId || isExportingPdf) return;
+
+    setIsExportingPdf(true);
+    setError(null);
+
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 40;
+      const contentWidth = pageWidth - margin * 2;
+      let cursorY = 56;
+
+      const addHeading = (text: string) => {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(text, margin, cursorY);
+        cursorY += 18;
+      };
+
+      const addBody = (text: string) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        const lines = doc.splitTextToSize(text, contentWidth) as string[];
+        lines.forEach((line) => {
+          if (cursorY > 790) {
+            doc.addPage();
+            cursorY = 56;
+          }
+          doc.text(line, margin, cursorY);
+          cursorY += 14;
+        });
+      };
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Patient Assessment Report", margin, cursorY);
+      cursorY += 26;
+
+      addHeading("Session Details");
+      addBody(`Session ID: ${sessionId}`);
+      addBody(`Generated: ${new Date(result.generated_at).toLocaleString()}`);
+      addBody(`Total Score: ${result.total_score}`);
+      addBody(`Provisional Diagnosis: ${primary?.label ?? "Not available"}`);
+      cursorY += 10;
+
+      addHeading("Flagged Domains");
+      addBody(
+        topFlagged.length > 0
+          ? topFlagged.join(", ")
+          : "No threshold elevation.",
+      );
+      cursorY += 10;
+
+      addHeading("Interpretation");
+      addBody(result.diagnosis.note ?? "Not available.");
+
+      if (result.diagnosis.clinicianNote) {
+        cursorY += 10;
+        addHeading("Clinician Observation");
+        addBody(result.diagnosis.clinicianNote);
+      }
+
+      const filename = `assessment-report-${sessionId}.pdf`;
+      const isSmallScreen =
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 767px)").matches;
+
+      if (
+        isSmallScreen &&
+        typeof navigator !== "undefined" &&
+        navigator.share
+      ) {
+        const buffer = doc.output("arraybuffer");
+        const file = new File([buffer], filename, { type: "application/pdf" });
+
+        if (
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] })
+        ) {
+          await navigator.share({
+            title: "Assessment Report",
+            text: "DSM-5 assessment report",
+            files: [file],
+          });
+          return;
+        }
+      }
+
+      doc.save(filename);
+    } catch (exportError) {
+      setError(
+        exportError instanceof Error
+          ? exportError.message
+          : "Failed to generate PDF report",
+      );
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
       <div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
@@ -106,15 +241,25 @@ function ReportContent() {
                   Print-ready summary from completed DSM-5 session.
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <ActionButton
-                  text="Download PDF"
-                  onClick={() => window.print()}
+                  text={isExportingPdf ? "Generating PDF..." : "Download PDF"}
+                  isLoading={isExportingPdf}
+                  onClick={() => {
+                    void downloadReportPdf();
+                  }}
                 />
                 <ActionButton
                   text="Print"
                   variant="ghost"
                   onClick={() => window.print()}
+                />
+                <ActionButton
+                  text={isDeleting ? "Deleting..." : "Delete Report"}
+                  variant="ghost"
+                  onClick={() => {
+                    setDeleteDialogOpen(true);
+                  }}
                 />
               </div>
             </div>
@@ -178,11 +323,30 @@ function ReportContent() {
                   <p className="font-semibold">Interpretation</p>
                   <p className="mt-1">{result.diagnosis.note}</p>
                 </div>
+
+                {result.diagnosis.clinicianNote && (
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                    <p className="font-semibold">Clinician Observation</p>
+                    <p className="mt-1">{result.diagnosis.clinicianNote}</p>
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Report"
+        message="This will permanently remove the report and questionnaire answers from the database."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        loading={isDeleting}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={() => {
+          void deleteReport();
+        }}
+      />
     </div>
   );
 }

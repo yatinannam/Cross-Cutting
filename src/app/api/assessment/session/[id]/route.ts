@@ -55,3 +55,72 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const doctor = await requireDoctorAuth(request);
+    const { id } = await context.params;
+    const supabase = getSupabaseServerClient();
+
+    const { data: session, error: sessionError } = await supabase
+      .from("assessment_sessions")
+      .select("id")
+      .eq("id", id)
+      .eq("doctor_id", doctor.doctorId)
+      .maybeSingle();
+
+    if (sessionError) {
+      return NextResponse.json(
+        { error: "Failed to validate session", details: sessionError.message },
+        { status: 500 },
+      );
+    }
+
+    if (!session) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    const { error: resultDeleteError } = await supabase
+      .from("scoring_results")
+      .delete()
+      .eq("session_id", id);
+
+    if (resultDeleteError) {
+      return NextResponse.json(
+        { error: "Failed to delete result", details: resultDeleteError.message },
+        { status: 500 },
+      );
+    }
+
+    const { error: answersDeleteError } = await supabase
+      .from("session_answers")
+      .delete()
+      .eq("session_id", id);
+
+    if (answersDeleteError) {
+      return NextResponse.json(
+        { error: "Failed to delete answers", details: answersDeleteError.message },
+        { status: 500 },
+      );
+    }
+
+    const { error: sessionDeleteError } = await supabase
+      .from("assessment_sessions")
+      .delete()
+      .eq("id", id)
+      .eq("doctor_id", doctor.doctorId);
+
+    if (sessionDeleteError) {
+      return NextResponse.json(
+        { error: "Failed to delete session", details: sessionDeleteError.message },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unexpected error while deleting session";
+    const status = message.includes("auth") || message.includes("token") ? 401 : 500;
+    return NextResponse.json({ error: message }, { status });
+  }
+}

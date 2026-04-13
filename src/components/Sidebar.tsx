@@ -1,12 +1,15 @@
 "use client";
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, ClipboardList, LogOut, Users } from "lucide-react";
+import { Home, ClipboardList, LogOut, Users, UserRoundCog } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 const items = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/assessment", label: "Assessment", icon: ClipboardList },
+  { href: "/patients", label: "Patients", icon: UserRoundCog },
   { href: "/history", label: "Records", icon: Users },
 ];
 
@@ -14,10 +17,20 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const clerk = useClerk();
+  const [signOutDialogOpen, setSignOutDialogOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleSignOut = async () => {
-    await clerk.signOut({ redirectUrl: "/sign-in" });
-    router.push("/sign-in");
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    try {
+      await clerk.signOut({ redirectUrl: "/sign-in" });
+      router.push("/sign-in");
+    } finally {
+      setIsSigningOut(false);
+      setSignOutDialogOpen(false);
+    }
   };
 
   return (
@@ -65,7 +78,7 @@ export default function Sidebar() {
         <div className="mt-auto pt-5 border-t border-slate-100">
           <button
             onClick={() => {
-              void handleSignOut();
+              setSignOutDialogOpen(true);
             }}
             className="group flex w-full items-center gap-3 px-3 py-3 rounded-xl text-[15px] font-medium text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
           >
@@ -115,8 +128,33 @@ export default function Sidebar() {
               </Link>
             );
           })}
+          <button
+            onClick={() => {
+              setSignOutDialogOpen(true);
+            }}
+            className="relative flex flex-col items-center justify-center w-full h-full gap-1 tap-highlight-transparent touch-manipulation group"
+            type="button"
+          >
+            <LogOut className="h-6 w-6 text-slate-400 transition-all duration-300 group-hover:text-red-500" />
+            <span className="text-[10px] tracking-wide font-medium text-slate-500 transition-all duration-300 group-hover:text-red-600">
+              Sign out
+            </span>
+          </button>
         </div>
       </nav>
+      <ConfirmDialog
+        open={signOutDialogOpen}
+        title="Sign out"
+        message="Are you sure you want to sign out from this device?"
+        confirmLabel="Sign out"
+        confirmVariant="danger"
+        loading={isSigningOut}
+        loadingLabel="Signing out..."
+        onCancel={() => setSignOutDialogOpen(false)}
+        onConfirm={() => {
+          void handleSignOut();
+        }}
+      />
     </>
   );
 }

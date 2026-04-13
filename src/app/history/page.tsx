@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { authFetch } from "@/lib/authFetch";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
@@ -30,6 +31,12 @@ export default function HistoryPage() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useRequireAuth();
   const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(
+    null,
+  );
+  const [pendingDeleteSessionId, setPendingDeleteSessionId] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +73,35 @@ export default function HistoryPage() {
     void bootstrap();
   }, [isLoaded, isSignedIn, router]);
 
+  const deleteSession = async (sessionId: string) => {
+    if (deletingSessionId) return;
+
+    setDeletingSessionId(sessionId);
+    setError(null);
+
+    try {
+      const response = await authFetch(`/api/assessment/session/${sessionId}`, {
+        method: "DELETE",
+      });
+
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to delete report");
+      }
+
+      setHistory((current) => current.filter((item) => item.id !== sessionId));
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to delete report",
+      );
+    } finally {
+      setDeletingSessionId(null);
+      setPendingDeleteSessionId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
       <div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
@@ -93,7 +129,72 @@ export default function HistoryPage() {
               </p>
             )}
 
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {history.map((item) => {
+                const patient = Array.isArray(item.patients)
+                  ? item.patients[0]
+                  : item.patients;
+                const result = Array.isArray(item.scoring_results)
+                  ? item.scoring_results[0]
+                  : item.scoring_results;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-slate-200 bg-white p-3"
+                  >
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold text-slate-900">
+                        {patient?.full_name ?? "Unknown"}
+                      </p>
+                      <p className="text-slate-600">
+                        Date: {new Date(item.started_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-slate-600">
+                        Questionnaire: DSM-5 Level 1
+                      </p>
+                      <p className="text-slate-600">
+                        Score: {result?.total_score ?? "-"}
+                      </p>
+                      <p className="text-slate-600">
+                        Diagnosis:{" "}
+                        {result?.diagnosis?.primaryDiagnosis?.label ??
+                          item.status}
+                      </p>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() =>
+                          router.push(`/results?sessionId=${item.id}`)
+                        }
+                        className="min-h-11 rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200"
+                      >
+                        Open
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPendingDeleteSessionId(item.id);
+                        }}
+                        disabled={deletingSessionId === item.id}
+                        className="min-h-11 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                      >
+                        {deletingSessionId === item.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {!loading && history.length === 0 && (
+                <div className="rounded-xl border border-slate-200 bg-white px-3 py-4 text-sm text-slate-500">
+                  No assessment history yet.
+                </div>
+              )}
+            </div>
+
+            <div className="hidden">
               <table className="min-w-full border-separate border-spacing-0">
                 <thead className="bg-slate-50 text-left text-xs uppercase tracking-[0.15em] text-slate-500">
                   <tr>
@@ -102,7 +203,7 @@ export default function HistoryPage() {
                     <th className="px-3 py-2">Questionnaire</th>
                     <th className="px-3 py-2">Score</th>
                     <th className="px-3 py-2">Diagnosis</th>
-                    <th className="px-3 py-2">Summary</th>
+                    <th className="px-3 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -131,14 +232,27 @@ export default function HistoryPage() {
                             item.status}
                         </td>
                         <td className="px-3 py-2 text-sm">
-                          <button
-                            onClick={() =>
-                              router.push(`/results?sessionId=${item.id}`)
-                            }
-                            className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200"
-                          >
-                            Open
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                router.push(`/results?sessionId=${item.id}`)
+                              }
+                              className="rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 hover:bg-slate-200"
+                            >
+                              Open
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPendingDeleteSessionId(item.id);
+                              }}
+                              disabled={deletingSessionId === item.id}
+                              className="rounded-md bg-rose-50 px-2 py-1 text-xs text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                            >
+                              {deletingSessionId === item.id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -159,6 +273,19 @@ export default function HistoryPage() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteSessionId)}
+        title="Delete Report"
+        message="This will permanently remove the session report and answers from the database."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        loading={Boolean(deletingSessionId)}
+        onCancel={() => setPendingDeleteSessionId(null)}
+        onConfirm={() => {
+          if (!pendingDeleteSessionId) return;
+          void deleteSession(pendingDeleteSessionId);
+        }}
+      />
     </div>
   );
 }

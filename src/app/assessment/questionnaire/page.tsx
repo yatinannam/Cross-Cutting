@@ -201,6 +201,10 @@ function QuestionnaireContent() {
         `/api/assessment/session/${sessionId}/complete`,
         {
           method: "POST",
+          body: JSON.stringify({
+            doctorNote:
+              localStorage.getItem(`clinical-note:${sessionId}`) ?? "",
+          }),
         },
       );
 
@@ -219,6 +223,8 @@ function QuestionnaireContent() {
         }
         throw new Error(data.error ?? "Unable to complete assessment");
       }
+
+      localStorage.removeItem(`clinical-note:${sessionId}`);
 
       router.push(`/results?sessionId=${sessionId}`);
     } catch (requestError) {

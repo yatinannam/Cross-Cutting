@@ -3,6 +3,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import Link from "next/link";
 import { authFetch } from "@/lib/authFetch";
 import { useRequireAuth } from "@/lib/useRequireAuth";
@@ -31,6 +32,7 @@ interface ResultPayload {
       supportingDomains: string[];
     }>;
     note?: string;
+    clinicianNote?: string;
   };
   generated_at: string;
 }
@@ -42,6 +44,8 @@ function ResultsContent() {
   const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ResultPayload | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +100,34 @@ function ResultsContent() {
   const differentials = result?.diagnosis.differentialDiagnoses ?? [];
   const flaggedDomains = result?.flagged_domains ?? [];
   const domainScores = result?.domain_scores ?? [];
+
+  const deleteReport = async () => {
+    if (!sessionId || isDeleting) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      const response = await authFetch(`/api/assessment/session/${sessionId}`, {
+        method: "DELETE",
+      });
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to delete report");
+      }
+
+      setDeleteDialogOpen(false);
+      router.replace("/history");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to delete report",
+      );
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8 transition-all">
@@ -229,6 +261,17 @@ function ResultsContent() {
                     {result.diagnosis.note}
                   </p>
                 </div>
+
+                {result.diagnosis.clinicianNote && (
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-sm font-semibold text-slate-700">
+                      Clinician Observation
+                    </p>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {result.diagnosis.clinicianNote}
+                    </p>
+                  </div>
+                )}
               </>
             )}
 
@@ -240,6 +283,13 @@ function ResultsContent() {
                 }}
               />
               <ActionButton
+                text={isDeleting ? "Deleting..." : "Delete Report"}
+                variant="ghost"
+                onClick={() => {
+                  setDeleteDialogOpen(true);
+                }}
+              />
+              <ActionButton
                 text="Go Home"
                 variant="ghost"
                 onClick={() => router.push("/")}
@@ -248,6 +298,18 @@ function ResultsContent() {
           </div>
         </div>
       </div>
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Report"
+        message="This will permanently remove the report and questionnaire answers from the database."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        loading={isDeleting}
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={() => {
+          void deleteReport();
+        }}
+      />
     </div>
   );
 }
