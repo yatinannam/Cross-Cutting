@@ -158,7 +158,7 @@ export default function AssessmentPage() {
                 <label className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block">
                   Questionnaire type
                 </label>
-                <div className="min-h-[44px] rounded-xl border border-slate-200 bg-white/50 px-3 py-2 text-[15px] font-medium text-slate-800 flex items-center shadow-sm">
+                <div className="min-h-11 rounded-xl border border-slate-200 bg-white/50 px-3 py-2 text-[15px] font-medium text-slate-800 flex items-center shadow-sm">
                   DSM-5 Adult Level 1
                 </div>
                 <p className="mt-2 text-[13px] font-medium text-slate-500">

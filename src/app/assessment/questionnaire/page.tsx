@@ -243,7 +243,7 @@ function QuestionnaireContent() {
       <div className="min-h-screen bg-slate-50 pb-28 text-slate-900 xl:pb-8 pt-4 sm:pt-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col xl:flex-row gap-6 px-4 sm:px-6">
           <Sidebar />
-          <div className="flex-1 rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm min-h-[500px] flex items-center justify-center">
+          <div className="flex-1 rounded-2xl border border-slate-200/60 bg-white p-6 shadow-sm min-h-125 flex items-center justify-center">
             <div className="flex flex-col items-center justify-center gap-3">
               <div className="w-8 h-8 rounded-full border-4 border-blue-100 border-t-primary animate-spin" />
               <p className="text-sm font-medium text-slate-500 animate-pulse">
