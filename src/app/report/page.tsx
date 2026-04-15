@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { authFetch } from "@/lib/authFetch";
+import { getAssessmentFormTitle } from "@/lib/assessmentForms";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface ReportResult {
@@ -26,6 +27,10 @@ interface ReportResult {
   generated_at: string;
 }
 
+interface SessionMeta {
+  form_key?: string;
+}
+
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +38,7 @@ function ReportContent() {
   const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ReportResult | null>(null);
+  const [sessionMeta, setSessionMeta] = useState<SessionMeta | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -57,6 +63,7 @@ function ReportContent() {
           `/api/assessment/session/${sessionId}/result`,
         );
         const data = (await response.json()) as {
+          session?: SessionMeta;
           result: ReportResult | null;
           error?: string;
           message?: string;
@@ -66,6 +73,7 @@ function ReportContent() {
           throw new Error(data.error ?? "Unable to load report");
         }
 
+        setSessionMeta(data.session ?? null);
         if (!data.result) {
           throw new Error(
             data.message ?? "Result not available for this session",
@@ -92,6 +100,9 @@ function ReportContent() {
     () => result?.flagged_domains.slice(0, 5) ?? [],
     [result],
   );
+  const formTitle = getAssessmentFormTitle(sessionMeta?.form_key);
+  const reportTitle = `${formTitle} Report`;
+  const reportSubtitle = `Print-ready summary from the completed ${formTitle.toLowerCase()} session.`;
 
   const deleteReport = async () => {
     if (!sessionId || isDeleting) return;
@@ -158,7 +169,7 @@ function ReportContent() {
 
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Patient Assessment Report", margin, cursorY);
+      doc.text(reportTitle, margin, cursorY);
       cursorY += 26;
 
       addHeading("Session Details");
@@ -204,7 +215,7 @@ function ReportContent() {
         ) {
           await navigator.share({
             title: "Assessment Report",
-            text: "DSM-5 assessment report",
+            text: reportTitle,
             files: [file],
           });
           return;
@@ -234,12 +245,8 @@ function ReportContent() {
                 <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
                   Medical Report
                 </p>
-                <h1 className="text-2xl font-semibold">
-                  Patient Assessment Report
-                </h1>
-                <p className="text-sm text-slate-500">
-                  Print-ready summary from completed DSM-5 session.
-                </p>
+                <h1 className="text-2xl font-semibold">{reportTitle}</h1>
+                <p className="text-sm text-slate-500">{reportSubtitle}</p>
               </div>
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
                 <ActionButton

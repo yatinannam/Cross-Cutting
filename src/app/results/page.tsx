@@ -6,6 +6,7 @@ import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Link from "next/link";
 import { authFetch } from "@/lib/authFetch";
+import { getAssessmentFormTitle } from "@/lib/assessmentForms";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface DomainScore {
@@ -37,6 +38,10 @@ interface ResultPayload {
   generated_at: string;
 }
 
+interface SessionMeta {
+  form_key?: string;
+}
+
 function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,6 +49,7 @@ function ResultsContent() {
   const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [result, setResult] = useState<ResultPayload | null>(null);
+  const [sessionMeta, setSessionMeta] = useState<SessionMeta | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -67,6 +73,7 @@ function ResultsContent() {
           `/api/assessment/session/${sessionId}/result`,
         );
         const data = (await response.json()) as {
+          session?: SessionMeta;
           result: ResultPayload | null;
           error?: string;
           message?: string;
@@ -76,6 +83,7 @@ function ResultsContent() {
           throw new Error(data.error ?? "Unable to load result");
         }
 
+        setSessionMeta(data.session ?? null);
         if (!data.result) {
           setError(data.message ?? "Result not available yet.");
           return;
@@ -100,6 +108,7 @@ function ResultsContent() {
   const differentials = result?.diagnosis.differentialDiagnoses ?? [];
   const flaggedDomains = result?.flagged_domains ?? [];
   const domainScores = result?.domain_scores ?? [];
+  const questionnaireTitle = `${getAssessmentFormTitle(sessionMeta?.form_key)} Summary`;
 
   const deleteReport = async () => {
     if (!sessionId || isDeleting) return;
@@ -141,7 +150,7 @@ function ResultsContent() {
                   Assessment results
                 </p>
                 <h1 className="text-2xl font-semibold text-slate-900">
-                  DSM-5 Level 1 Summary
+                  {questionnaireTitle}
                 </h1>
                 <p className="text-sm text-slate-500">
                   Review provisional diagnosis, domain elevations, and

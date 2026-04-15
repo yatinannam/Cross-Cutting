@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
 import ConfirmDialog from "@/components/ConfirmDialog";
@@ -14,6 +13,7 @@ interface PatientItem {
   full_name: string;
   dob: string | null;
   sex: string | null;
+  phone_number: string | null;
   created_at?: string;
 }
 
@@ -21,16 +21,37 @@ interface FormState {
   fullName: string;
   dob: string;
   sex: string;
+  phoneNumber: string;
 }
 
 const DEFAULT_FORM: FormState = {
   fullName: "",
   dob: "",
   sex: "Female",
+  phoneNumber: "",
 };
 
+function getAgeFromDob(dob: string | null) {
+  if (!dob) return null;
+
+  const birthDate = new Date(dob);
+  if (Number.isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDifference = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDifference < 0 ||
+    (monthDifference === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age -= 1;
+  }
+
+  return age >= 0 ? age : null;
+}
+
 export default function PatientsPage() {
-  const router = useRouter();
   const { isLoaded, isSignedIn } = useRequireAuth();
 
   const [patients, setPatients] = useState<PatientItem[]>([]);
@@ -39,6 +60,7 @@ export default function PatientsPage() {
 
   const [createForm, setCreateForm] = useState<FormState>(DEFAULT_FORM);
   const [isCreating, setIsCreating] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
 
   const [editingPatientId, setEditingPatientId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<FormState>(DEFAULT_FORM);
@@ -105,6 +127,7 @@ export default function PatientsPage() {
           fullName: createForm.fullName.trim(),
           dob: createForm.dob || null,
           sex: createForm.sex || null,
+          phoneNumber: createForm.phoneNumber.trim() || null,
         }),
       });
 
@@ -119,6 +142,7 @@ export default function PatientsPage() {
 
       setPatients((current) => [data.patient as PatientItem, ...current]);
       setCreateForm(DEFAULT_FORM);
+      setIsCreateFormOpen(false);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -136,6 +160,7 @@ export default function PatientsPage() {
       fullName: patient.full_name,
       dob: patient.dob ?? "",
       sex: patient.sex ?? "Other",
+      phoneNumber: patient.phone_number ?? "",
     });
     setError(null);
   };
@@ -162,6 +187,7 @@ export default function PatientsPage() {
           fullName: editForm.fullName.trim(),
           dob: editForm.dob || null,
           sex: editForm.sex || null,
+          phoneNumber: editForm.phoneNumber.trim() || null,
         }),
       });
 
@@ -243,8 +269,8 @@ export default function PatientsPage() {
                 </p>
               </div>
               <ActionButton
-                text="Start Assessment"
-                onClick={() => router.push("/assessment")}
+                text={isCreateFormOpen ? "Hide Create Form" : "Create Patient"}
+                onClick={() => setIsCreateFormOpen((current) => !current)}
               />
             </div>
 
@@ -254,63 +280,77 @@ export default function PatientsPage() {
               </p>
             )}
 
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
-                Add New Patient
-              </p>
-              <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-4">
-                <input
-                  className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
-                  placeholder="Full Name"
-                  value={createForm.fullName}
-                  onChange={(event) =>
-                    setCreateForm((prev) => ({
-                      ...prev,
-                      fullName: event.target.value,
-                    }))
-                  }
-                />
-                <input
-                  type="date"
-                  className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
-                  value={createForm.dob}
-                  onChange={(event) =>
-                    setCreateForm((prev) => ({
-                      ...prev,
-                      dob: event.target.value,
-                    }))
-                  }
-                />
-                <Dropdown
-                  value={createForm.sex}
-                  onChange={(value) =>
-                    setCreateForm((prev) => ({ ...prev, sex: value }))
-                  }
-                  options={[
-                    { value: "Female", label: "Female" },
-                    { value: "Male", label: "Male" },
-                    { value: "Other", label: "Other" },
-                  ]}
-                />
-                <button
-                  onClick={() => {
-                    void handleCreatePatient();
-                  }}
-                  disabled={isCreating}
-                  className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
-                >
-                  {isCreating ? "Creating..." : "Create"}
-                </button>
+            {isCreateFormOpen && (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  Add New Patient
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-4">
+                  <input
+                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    placeholder="Full Name"
+                    value={createForm.fullName}
+                    onChange={(event) =>
+                      setCreateForm((prev) => ({
+                        ...prev,
+                        fullName: event.target.value,
+                      }))
+                    }
+                  />
+                  <input
+                    type="date"
+                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    value={createForm.dob}
+                    onChange={(event) =>
+                      setCreateForm((prev) => ({
+                        ...prev,
+                        dob: event.target.value,
+                      }))
+                    }
+                  />
+                  <Dropdown
+                    value={createForm.sex}
+                    onChange={(value) =>
+                      setCreateForm((prev) => ({ ...prev, sex: value }))
+                    }
+                    options={[
+                      { value: "Female", label: "Female" },
+                      { value: "Male", label: "Male" },
+                      { value: "Other", label: "Other" },
+                    ]}
+                  />
+                  <input
+                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    placeholder="Phone Number"
+                    value={createForm.phoneNumber}
+                    onChange={(event) =>
+                      setCreateForm((prev) => ({
+                        ...prev,
+                        phoneNumber: event.target.value,
+                      }))
+                    }
+                  />
+                  <button
+                    onClick={() => {
+                      void handleCreatePatient();
+                    }}
+                    disabled={isCreating}
+                    className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60 md:col-span-4"
+                  >
+                    {isCreating ? "Creating..." : "Create"}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
               {sortedPatients.map((patient) => {
                 const isEditing = editingPatientId === patient.id;
+                const age = getAgeFromDob(patient.dob);
                 return (
                   <div
                     key={patient.id}
-                    className="rounded-xl border border-slate-200 bg-white p-3"
+                    className="self-start rounded-xl border border-slate-200 bg-white p-3"
                   >
                     {isEditing ? (
                       <div className="space-y-3">
@@ -344,6 +384,11 @@ export default function PatientsPage() {
                               }))
                             }
                           />
+                          <p className="mt-1 text-xs text-slate-500">
+                            {editForm.dob
+                              ? `Age: ${getAgeFromDob(editForm.dob) ?? "-"}`
+                              : "Age will appear after DOB is entered."}
+                          </p>
                         </div>
                         <div>
                           <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
@@ -362,6 +407,22 @@ export default function PatientsPage() {
                               { value: "Male", label: "Male" },
                               { value: "Other", label: "Other" },
                             ]}
+                          />
+                        </div>
+                        <div>
+                          <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                            Phone Number
+                          </p>
+                          <input
+                            className="min-h-11 w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm"
+                            value={editForm.phoneNumber}
+                            onChange={(event) =>
+                              setEditForm((prev) => ({
+                                ...prev,
+                                phoneNumber: event.target.value,
+                              }))
+                            }
+                            placeholder="e.g. +91 98765 43210"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-2 pt-1">
@@ -398,6 +459,12 @@ export default function PatientsPage() {
                           </p>
                           <p className="text-sm text-slate-600">
                             Sex: {patient.sex ?? "-"}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            Age: {age ?? "-"}
+                          </p>
+                          <p className="text-sm text-slate-600">
+                            Phone: {patient.phone_number ?? "-"}
                           </p>
                         </div>
                         <div className="grid grid-cols-2 gap-2">

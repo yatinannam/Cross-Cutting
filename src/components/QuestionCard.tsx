@@ -53,7 +53,7 @@ export default function QuestionCard({
           <button
             key={opt.score}
             type="button"
-            className={`group relative flex min-h-[56px] w-full items-center justify-between rounded-xl border p-4 text-left text-[15px] font-medium transition-all duration-200 active:scale-[0.98] select-none touch-manipulation ${
+            className={`group relative flex min-h-14 w-full items-center justify-between rounded-xl border p-4 text-left text-[15px] font-medium transition-all duration-200 active:scale-[0.98] select-none touch-manipulation ${
               value === opt.score
                 ? "border-primary bg-blue-50/50 text-blue-700 shadow-[0_0_0_1px_rgba(59,130,246,1)]"
                 : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
@@ -69,7 +69,7 @@ export default function QuestionCard({
               )}
             </div>
             {value === opt.score && (
-              <div className="absolute inset-0 rounded-xl bg-blue-500/[0.03]" />
+              <div className="absolute inset-0 rounded-xl bg-blue-500/3" />
             )}
           </button>
         ))}

@@ -6,6 +6,7 @@ import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import ActionButton from "@/components/ActionButton";
 import { authFetch } from "@/lib/authFetch";
+import { getAssessmentFormTitle } from "@/lib/assessmentForms";
 import { HospitalIcon } from "lucide-react";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
@@ -24,6 +25,7 @@ interface DashboardResponse {
     id: string;
     started_at: string;
     status: string;
+    form_key?: string;
     patients: { full_name: string } | { full_name: string }[] | null;
     scoring_results:
       | {
@@ -170,6 +172,9 @@ export default function Home() {
                 const label = Array.isArray(item.scoring_results)
                   ? item.scoring_results[0]?.diagnosis?.primaryDiagnosis?.label
                   : item.scoring_results?.diagnosis?.primaryDiagnosis?.label;
+                const questionnaireLabel = getAssessmentFormTitle(
+                  item.form_key,
+                );
 
                 return (
                   <div
@@ -185,7 +190,7 @@ export default function Home() {
                           {patient?.full_name ?? "Unknown Patient"}
                         </div>
                         <div className="text-[13px] font-medium text-slate-500">
-                          DSM-5 Level 1 •{" "}
+                          {questionnaireLabel} •{" "}
                           {new Date(item.started_at).toLocaleDateString()}
                         </div>
                       </div>
@@ -222,7 +227,7 @@ export default function Home() {
                   <h3 className="text-[15px] font-bold text-slate-700 mb-1">
                     No assessments yet
                   </h3>
-                  <p className="text-[14px] text-slate-500 max-w-[250px]">
+                  <p className="text-[14px] text-slate-500 max-w-62.5">
                     Get started by running a new assessment for a patient.
                   </p>
                   <ActionButton

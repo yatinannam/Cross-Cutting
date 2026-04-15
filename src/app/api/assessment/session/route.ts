@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { assessmentFormOptions, type AssessmentFormKey } from "@/lib/assessmentForms";
 import { requireDoctorAuth } from "@/lib/routeAuth";
+import { getSupabaseServerClient } from "@/lib/supabaseServer";
 
 function normalizeName(value: unknown, fallback: string): string {
   if (typeof value !== "string") return fallback;
@@ -16,6 +17,11 @@ export async function POST(request: NextRequest) {
     const requestedPatientId = typeof payload.patientId === "string" ? payload.patientId : "";
     const fallbackPatientName = normalizeName(payload.patientName, "Unknown Patient");
     const doctorNote = normalizeName(payload.doctorNote, "");
+    const formKey =
+      typeof payload.formKey === "string" &&
+      assessmentFormOptions.some((option) => option.key === payload.formKey)
+        ? (payload.formKey as AssessmentFormKey)
+        : "dsm5_level1_adult";
 
     let patientId = requestedPatientId;
 
@@ -61,7 +67,7 @@ export async function POST(request: NextRequest) {
         doctor_id: doctor.doctorId,
         status: "in_progress",
         current_question_index: 1,
-        form_key: "dsm5_level1_adult",
+        form_key: formKey,
         form_version: 1,
       })
       .select("id, status, current_question_index, started_at")
@@ -87,6 +93,7 @@ export async function POST(request: NextRequest) {
         id: doctor.doctorId,
         name: doctor.doctorName,
       },
+      formKey,
       doctorNote,
     });
   } catch (error) {

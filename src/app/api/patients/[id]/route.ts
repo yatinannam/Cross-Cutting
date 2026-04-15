@@ -23,6 +23,7 @@ export async function PATCH(
     const fullName = normalizeString(payload.fullName);
     const dob = normalizeString(payload.dob);
     const sex = normalizeString(payload.sex);
+    const phoneNumber = normalizeString(payload.phoneNumber);
 
     if (!fullName) {
       return NextResponse.json(
@@ -38,10 +39,11 @@ export async function PATCH(
         full_name: fullName,
         dob,
         sex,
+        phone_number: phoneNumber,
       })
       .eq("id", id)
       .eq("doctor_id", doctor.doctorId)
-      .select("id, full_name, dob, sex, created_at")
+      .select("id, full_name, dob, sex, phone_number, created_at")
       .maybeSingle();
 
     if (error) {

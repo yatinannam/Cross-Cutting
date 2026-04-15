@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { authFetch } from "@/lib/authFetch";
+import { getAssessmentFormTitle } from "@/lib/assessmentForms";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface HistoryItem {
@@ -11,6 +12,7 @@ interface HistoryItem {
   started_at: string;
   completed_at: string | null;
   status: string;
+  form_key?: string;
   patients:
     | { id: string; full_name: string }
     | { id: string; full_name: string }[]
@@ -137,6 +139,9 @@ export default function HistoryPage() {
                 const result = Array.isArray(item.scoring_results)
                   ? item.scoring_results[0]
                   : item.scoring_results;
+                const questionnaireLabel = getAssessmentFormTitle(
+                  item.form_key,
+                );
 
                 return (
                   <div
@@ -151,7 +156,7 @@ export default function HistoryPage() {
                         Date: {new Date(item.started_at).toLocaleDateString()}
                       </p>
                       <p className="text-slate-600">
-                        Questionnaire: DSM-5 Level 1
+                        Questionnaire: {questionnaireLabel}
                       </p>
                       <p className="text-slate-600">
                         Score: {result?.total_score ?? "-"}
@@ -214,6 +219,9 @@ export default function HistoryPage() {
                     const result = Array.isArray(item.scoring_results)
                       ? item.scoring_results[0]
                       : item.scoring_results;
+                    const questionnaireLabel = getAssessmentFormTitle(
+                      item.form_key,
+                    );
 
                     return (
                       <tr key={item.id} className="border-y border-slate-100">
@@ -223,7 +231,9 @@ export default function HistoryPage() {
                         <td className="px-3 py-2 text-sm font-semibold">
                           {patient?.full_name ?? "Unknown"}
                         </td>
-                        <td className="px-3 py-2 text-sm">DSM-5 Level 1</td>
+                        <td className="px-3 py-2 text-sm">
+                          {questionnaireLabel}
+                        </td>
                         <td className="px-3 py-2 text-sm">
                           {result?.total_score ?? "-"}
                         </td>

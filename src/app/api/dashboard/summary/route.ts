@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     const { data: recentSessions, error: recentError } = await supabase
       .from("assessment_sessions")
-      .select("id, started_at, status, patients(full_name), scoring_results(total_score, diagnosis)")
+      .select("id, started_at, status, form_key, patients(full_name), scoring_results(total_score, diagnosis)")
       .eq("doctor_id", doctor.doctorId)
       .order("started_at", { ascending: false })
       .limit(5);
@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     const scores = (recentSessions ?? [])
+      .filter((session) => session.form_key !== "capacity_assessment")
       .flatMap((session) => (Array.isArray(session.scoring_results) ? session.scoring_results : [session.scoring_results]))
       .map((item) => Number(item?.total_score))
       .filter((score) => Number.isFinite(score));

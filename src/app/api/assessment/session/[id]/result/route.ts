@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { data: session, error: sessionError } = await supabase
       .from("assessment_sessions")
-      .select("id, status, started_at, completed_at, patient_id")
+      .select("id, status, started_at, completed_at, patient_id, form_key")
       .eq("id", id)
       .eq("doctor_id", doctor.doctorId)
       .maybeSingle();

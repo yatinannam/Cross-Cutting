@@ -5,6 +5,10 @@ import Sidebar from "@/components/Sidebar";
 import ActionButton from "@/components/ActionButton";
 import Dropdown from "@/components/Dropdown";
 import { authFetch } from "@/lib/authFetch";
+import {
+  assessmentFormOptions,
+  type AssessmentFormKey,
+} from "@/lib/assessmentForms";
 import { useRequireAuth } from "@/lib/useRequireAuth";
 
 interface PatientItem {
@@ -19,6 +23,8 @@ export default function AssessmentPage() {
   const { isLoaded, isSignedIn } = useRequireAuth();
   const [patients, setPatients] = useState<PatientItem[]>([]);
   const [patientId, setPatientId] = useState("");
+  const [questionnaireType, setQuestionnaireType] =
+    useState<AssessmentFormKey>("dsm5_level1_adult");
   const [doctorNote, setDoctorNote] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
@@ -82,6 +88,7 @@ export default function AssessmentPage() {
           patientId,
           patientName: selectedPatient?.full_name,
           doctorNote,
+          formKey: questionnaireType,
         }),
       });
 
@@ -155,14 +162,21 @@ export default function AssessmentPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-4">
-                <label className="text-[12px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 block">
-                  Questionnaire type
-                </label>
-                <div className="min-h-11 rounded-xl border border-slate-200 bg-white/50 px-3 py-2 text-[15px] font-medium text-slate-800 flex items-center shadow-sm">
-                  DSM-5 Adult Level 1
-                </div>
+                <Dropdown
+                  label="Questionnaire type"
+                  value={questionnaireType}
+                  onChange={(value) =>
+                    setQuestionnaireType(value as AssessmentFormKey)
+                  }
+                  options={assessmentFormOptions.map((item) => ({
+                    value: item.key,
+                    label: item.label,
+                  }))}
+                />
                 <p className="mt-2 text-[13px] font-medium text-slate-500">
-                  23 domains, 1 to 5 severity scale
+                  {questionnaireType === "capacity_assessment"
+                    ? "Clinical capacity workflow with branching decisions"
+                    : "23 domains, 1 to 5 severity scale"}
                 </p>
               </div>
               <div className="md:col-span-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-4 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-primary/50">

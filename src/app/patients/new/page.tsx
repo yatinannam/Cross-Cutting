@@ -14,6 +14,7 @@ export default function NewPatientPage() {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [sex, setSex] = useState("Female");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function NewPatientPage() {
           fullName: name.trim(),
           dob: dob || null,
           sex,
+          phoneNumber: phoneNumber.trim() || null,
           notes,
         }),
       });
@@ -105,6 +107,26 @@ export default function NewPatientPage() {
                   value={dob}
                   onChange={(event) => setDob(event.target.value)}
                 />
+                <p className="mt-2 text-xs text-slate-500">
+                  {dob
+                    ? `Age: ${(() => {
+                        const birthDate = new Date(dob);
+                        if (Number.isNaN(birthDate.getTime())) return "-";
+                        const today = new Date();
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDifference =
+                          today.getMonth() - birthDate.getMonth();
+                        if (
+                          monthDifference < 0 ||
+                          (monthDifference === 0 &&
+                            today.getDate() < birthDate.getDate())
+                        ) {
+                          age -= 1;
+                        }
+                        return age >= 0 ? age : "-";
+                      })()}`
+                    : "Age will appear after DOB is entered."}
+                </p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <Dropdown
@@ -117,6 +139,17 @@ export default function NewPatientPage() {
                     { value: "Other", label: "Other" },
                   ]}
                   className="mt-1"
+                />
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <label className="text-xs font-semibold uppercase text-slate-500">
+                  Phone Number
+                </label>
+                <input
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2"
+                  value={phoneNumber}
+                  onChange={(event) => setPhoneNumber(event.target.value)}
+                  placeholder="e.g. +91 98765 43210"
                 />
               </div>
             </div>

@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
     const fullName = typeof payload.fullName === "string" ? payload.fullName.trim() : "";
     const dob = typeof payload.dob === "string" && payload.dob.trim().length > 0 ? payload.dob : null;
     const sex = typeof payload.sex === "string" && payload.sex.trim().length > 0 ? payload.sex : null;
+    const phoneNumber =
+      typeof payload.phoneNumber === "string" && payload.phoneNumber.trim().length > 0
+        ? payload.phoneNumber.trim()
+        : null;
 
     if (!fullName) {
       return NextResponse.json({ error: "Patient fullName is required" }, { status: 400 });
@@ -44,9 +48,10 @@ export async function POST(request: NextRequest) {
         full_name: fullName,
         dob,
         sex,
+        phone_number: phoneNumber,
         doctor_id: doctor.doctorId,
       })
-      .select("id, full_name, dob, sex, created_at")
+      .select("id, full_name, dob, sex, phone_number, created_at")
       .single();
 
     if (error || !data) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { dsm5Level1AdultDefinition } from "@/lib/dsm5";
-import { getSupabaseServerClient } from "@/lib/supabaseServer";
+import { getAssessmentFormDefinition } from "@/lib/assessmentForms";
 import { requireDoctorAuth } from "@/lib/routeAuth";
+import { getSupabaseServerClient } from "@/lib/supabaseServer";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { data: session, error: sessionError } = await supabase
       .from("assessment_sessions")
-      .select("id, status, current_question_index, started_at, completed_at")
+      .select("id, status, current_question_index, started_at, completed_at, form_key")
       .eq("id", id)
       .eq("doctor_id", doctor.doctorId)
       .maybeSingle();
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { data: answers, error: answersError } = await supabase
       .from("session_answers")
-      .select("question_id, score")
+      .select("question_id, answer_value, score")
       .eq("session_id", id);
 
     if (answersError) {
@@ -39,15 +39,19 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       );
     }
 
-    const answerMap = (answers ?? []).reduce<Record<number, number>>((acc, answer) => {
-      acc[Number(answer.question_id)] = Number(answer.score);
+    const answerMap = (answers ?? []).reduce<Record<string, string>>((acc, answer) => {
+      const questionKey = String(answer.question_id);
+      const value = typeof answer.answer_value === "string" && answer.answer_value.length > 0
+        ? answer.answer_value
+        : String(answer.score ?? "");
+      acc[questionKey] = value;
       return acc;
     }, {});
 
     return NextResponse.json({
       session,
       answers: answerMap,
-      definition: dsm5Level1AdultDefinition,
+      definition: getAssessmentFormDefinition(session?.form_key ?? undefined),
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error while fetching session";
