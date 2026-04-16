@@ -31,6 +31,12 @@ interface SessionMeta {
   form_key?: string;
 }
 
+function waitForNextPaint() {
+  return new Promise<void>((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
 function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -139,6 +145,9 @@ function ReportContent() {
     setError(null);
 
     try {
+      // Let the loading state render before doing expensive PDF work.
+      await waitForNextPaint();
+
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({ unit: "pt", format: "a4" });
       const pageWidth = doc.internal.pageSize.getWidth();
