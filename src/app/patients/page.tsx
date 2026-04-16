@@ -287,7 +287,7 @@ export default function PatientsPage() {
                 </p>
                 <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-4">
                   <input
-                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm"
                     placeholder="Full Name"
                     value={createForm.fullName}
                     onChange={(event) =>
@@ -298,9 +298,18 @@ export default function PatientsPage() {
                     }
                   />
                   <input
-                    type="date"
-                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    type={createForm.dob ? "date" : "text"}
+                    placeholder="Date of Birth"
+                    className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm"
                     value={createForm.dob}
+                    onFocus={(event) => {
+                      event.currentTarget.type = "date";
+                    }}
+                    onBlur={(event) => {
+                      if (!event.currentTarget.value) {
+                        event.currentTarget.type = "text";
+                      }
+                    }}
                     onChange={(event) =>
                       setCreateForm((prev) => ({
                         ...prev,
@@ -320,7 +329,7 @@ export default function PatientsPage() {
                     ]}
                   />
                   <input
-                    className="rounded-lg border border-slate-300 bg-white p-2 text-sm"
+                    className="w-full rounded-lg border border-slate-300 bg-white p-2 text-sm"
                     placeholder="Phone Number"
                     value={createForm.phoneNumber}
                     onChange={(event) =>
