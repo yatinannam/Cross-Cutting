@@ -89,7 +89,7 @@ export default function Home() {
     router.push("/assessment");
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || !isSignedIn) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-primary animate-spin" />
