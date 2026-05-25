@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 const isPublicRoute = createRouteMatcher([
+  "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/login(.*)",
@@ -9,6 +10,14 @@ const isPublicRoute = createRouteMatcher([
   "/offline.html",
   "/icons/(.*)",
   "/favicon.ico",
+  // Allow all app routes through middleware, auth will be checked client-side or in routes
+  "/assessment(.*)",
+  "/dashboard(.*)",
+  "/history(.*)",
+  "/login(.*)",
+  "/patients(.*)",
+  "/report(.*)",
+  "/results(.*)",
 ]);
 
 export default clerkMiddleware((auth, req) => {
