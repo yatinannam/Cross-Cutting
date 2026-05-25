@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-const CACHE_NAME = "mh-suite-v1";
+const CACHE_NAME = "mh-suite-v2";
 const CORE_ASSETS = [
   "/",
   "/offline.html",

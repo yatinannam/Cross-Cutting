@@ -62,6 +62,8 @@ export default function RootLayout({
 					publishableKey={
 						process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 					}
+					domain={process.env.NEXT_PUBLIC_CLERK_DOMAIN || "clerk.com"}
+					proxyUrl={process.env.NEXT_PUBLIC_CLERK_PROXY_URL}
 				>
 					<PwaRegister />
 					{children}
