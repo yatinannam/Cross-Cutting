@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     const { data: session, error: sessionError } = await supabase
       .from("assessment_sessions")
-      .select("id, status, started_at, completed_at, patient_id, form_key")
+      .select("id, status, started_at, completed_at, patient_id, form_key, patients(id, full_name, uhid)")
       .eq("id", id)
       .eq("doctor_id", doctor.doctorId)
       .maybeSingle();
@@ -39,16 +39,30 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       );
     }
 
+    const patient = Array.isArray(session.patients)
+      ? session.patients[0]
+      : session.patients ?? null;
+
+    const sessionPayload = {
+      id: session.id,
+      status: session.status,
+      started_at: session.started_at,
+      completed_at: session.completed_at,
+      patient_id: session.patient_id,
+      form_key: session.form_key,
+      patient,
+    };
+
     if (!result) {
       return NextResponse.json({
-        session,
+        session: sessionPayload,
         result: null,
         message: "Result not generated yet. Complete the assessment first.",
       });
     }
 
     return NextResponse.json({
-      session,
+      session: sessionPayload,
       result,
     });
   } catch (error) {
